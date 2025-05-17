@@ -1,34 +1,71 @@
 # Chapter 1. Packet Forwarding (패킷 포워딩)
 
 ## 1. 패킷 포워딩이란?
-네트워크 장비(스위치, 라우터 등)가 수신한 패킷을 목적지로 전달하는 과정입니다.
 
-- **L2 스위치**: MAC 주소 기반 포워딩
-- **L3 라우터**: IP 주소 기반 포워딩
-
-## 2. 주요 개념
-- **Collision Domain**: 충돌이 발생할 수 있는 네트워크 구간 (허브/공유기 등)
-- **Broadcast Domain**: 브로드캐스트 패킷이 도달할 수 있는 범위 (VLAN, 라우터로 분리)
-- **Access Port / Trunk Port**:  
-  - Access: 단일 VLAN  
-  - Trunk: 여러 VLAN 태그 처리
-
-## 3. 포워딩 방식
-- **Layer 2 Forwarding**:  
-  - MAC 주소 테이블(MAC Address Table) 기반  
-  - 스위치가 목적지 MAC 주소를 보고 포트 결정
-- **Layer 3 Forwarding**:  
-  - 라우팅 테이블(Routing Table) 기반  
-  - 목적지 IP 주소를 보고 다음 홉 결정
-
-## 4. 주요 명령어 (Cisco IOS)
-- `show mac address-table`
-- `show ip route`
-- `show interfaces`
-- `show vlan brief`
+네트워크 장비(스위치, 라우터 등)가 수신한 패킷을 목적지로 전달하는 과정입니다.  
+패킷 포워딩은 네트워크의 기본 동작 원리이며, OSI 2계층(L2)과 3계층(L3)에서 각각 다르게 동작합니다.
 
 ---
 
-## 5. 요약
+## 2. 주요 개념
+
+### 2.1 Collision Domain (충돌 도메인)
+- 네트워크 내에서 두 장치가 동시에 데이터를 전송할 때 충돌이 발생할 수 있는 영역
+- 스위치 포트마다 별도의 Collision Domain을 가짐
+
+### 2.2 Broadcast Domain (브로드캐스트 도메인)
+- 브로드캐스트 패킷이 도달할 수 있는 네트워크의 범위
+- 라우터, L3 스위치, VLAN으로 분리 가능
+
+### 2.3 Access Port / Trunk Port
+- **Access Port**: 단일 VLAN에 속하는 포트 (일반 PC, 프린터 등 연결)
+- **Trunk Port**: 여러 VLAN의 트래픽을 태그(VLAN Tag)와 함께 전달하는 포트 (스위치-스위치, 스위치-라우터 연결)
+
+---
+
+## 3. 포워딩 방식
+
+### 3.1 Layer 2 Forwarding (스위치)
+- **MAC 주소 테이블(MAC Address Table)** 기반
+- 스위치는 수신한 프레임의 목적지 MAC 주소를 보고 해당 포트로 전달
+- MAC 주소 학습: 프레임의 소스 MAC 주소와 수신 포트를 테이블에 저장
+
+### 3.2 Layer 3 Forwarding (라우터)
+- **라우팅 테이블(Routing Table)** 기반
+- 라우터는 목적지 IP 주소를 보고 다음 홉(Next Hop) 또는 인터페이스를 결정
+- 직접 연결된 네트워크, 정적/동적 라우팅 정보 활용
+
+---
+
+## 4. 주요 명령어 (Cisco IOS)
+
+- **스위치**
+  - `show mac address-table` : MAC 주소 테이블 확인
+  - `show interfaces` : 포트 상태 및 통계 확인
+  - `show vlan brief` : VLAN 정보 확인
+
+- **라우터**
+  - `show ip route` : 라우팅 테이블 확인
+  - `show running-config` : 현재 설정 확인
+
+---
+
+## 5. 포워딩 과정 예시
+
+### [스위치의 L2 포워딩]
+1. PC1이 PC2로 프레임 전송
+2. 스위치는 소스 MAC을 MAC 테이블에 등록
+3. 목적지 MAC이 테이블에 있으면 해당 포트로 전달, 없으면 모든 포트로 플러딩
+
+### [라우터의 L3 포워딩]
+1. PC1이 다른 네트워크의 PC2로 패킷 전송
+2. 라우터는 목적지 IP를 라우팅 테이블에서 검색
+3. 일치하는 경로가 있으면 해당 인터페이스로 포워딩
+
+---
+
+## 6. 요약
+
 - L2는 MAC, L3는 IP 기반으로 포워딩
 - 스위치/라우터의 테이블(주소 테이블, 라우팅 테이블) 구조와 동작 원리 이해가 핵심
+- 실습을 통해 실제 포워딩 경로와 테이블 변화를 꼭 확인해볼 것
