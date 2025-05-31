@@ -1,71 +1,205 @@
-# Chapter 1. Packet Forwarding (패킷 포워딩)
 
-## 1. 패킷 포워딩이란?
+# CHAPTER 1: Packet Forwarding
 
-네트워크 장비(스위치, 라우터 등)가 수신한 패킷을 목적지로 전달하는 과정입니다.  
-패킷 포워딩은 네트워크의 기본 동작 원리이며, OSI 2계층(L2)과 3계층(L3)에서 각각 다르게 동작합니다.
-
----
-
-## 2. 주요 개념
-
-### 2.1 Collision Domain (충돌 도메인)
-- 네트워크 내에서 두 장치가 동시에 데이터를 전송할 때 충돌이 발생할 수 있는 영역
-- 스위치 포트마다 별도의 Collision Domain을 가짐
-
-### 2.2 Broadcast Domain (브로드캐스트 도메인)
-- 브로드캐스트 패킷이 도달할 수 있는 네트워크의 범위
-- 라우터, L3 스위치, VLAN으로 분리 가능
-
-### 2.3 Access Port / Trunk Port
-- **Access Port**: 단일 VLAN에 속하는 포트 (일반 PC, 프린터 등 연결)
-- **Trunk Port**: 여러 VLAN의 트래픽을 태그(VLAN Tag)와 함께 전달하는 포트 (스위치-스위치, 스위치-라우터 연결)
+## 📚 Chapter Summary
+이 장에서는 네트워크 장비(스위치와 라우터)가 어떻게 L2/L3 트래픽을 전달하는지를 설명하며, 포워딩 아키텍처(Centralized vs Distributed), CEF, VLAN, Access/Trunk 포트 설정 등을 다룹니다.
 
 ---
 
-## 3. 포워딩 방식
+## 🧠 "Do I Know This Already?" Quiz & Answers
 
-### 3.1 Layer 2 Forwarding (스위치)
-- **MAC 주소 테이블(MAC Address Table)** 기반
-- 스위치는 수신한 프레임의 목적지 MAC 주소를 보고 해당 포트로 전달
-- MAC 주소 학습: 프레임의 소스 MAC 주소와 수신 포트를 테이블에 저장
-
-### 3.2 Layer 3 Forwarding (라우터)
-- **라우팅 테이블(Routing Table)** 기반
-- 라우터는 목적지 IP 주소를 보고 다음 홉(Next Hop) 또는 인터페이스를 결정
-- 직접 연결된 네트워크, 정적/동적 라우팅 정보 활용
-
----
-
-## 4. 주요 명령어 (Cisco IOS)
-
-- **스위치**
-  - `show mac address-table` : MAC 주소 테이블 확인
-  - `show interfaces` : 포트 상태 및 통계 확인
-  - `show vlan brief` : VLAN 정보 확인
-
-- **라우터**
-  - `show ip route` : 라우팅 테이블 확인
-  - `show running-config` : 현재 설정 확인
+| 번호 | 문제 요약 | 정답 | 해설 요약 |
+|------|----------|------|------------|
+| 1 | L2 트래픽 전달 기준 | d | 목적지 MAC 주소 사용 |
+| 2 | 충돌 도메인 분리 장비 | b | Switch는 포트별 도메인 생성 |
+| 3 | L3 트래픽 전달 기준 | a, b | IP 주소 기반 전달 |
+| 4 | 브로드캐스트 도메인 분리 장비 | d | Router는 L3 경계 역할 |
+| 5 | MAC 주소 테이블 저장 방식 | b | CAM(Content Addressable Memory) |
+| 6 | 고성능 포워딩 아키텍처 | d | Distributed 구조는 라인 카드 기반 |
+| 7 | CEF 구성 요소 | b, d | FIB, Adjacency Table 포함 |
 
 ---
 
-## 5. 포워딩 과정 예시
+## 📖 Foundation Topics
 
-### [스위치의 L2 포워딩]
-1. PC1이 PC2로 프레임 전송
-2. 스위치는 소스 MAC을 MAC 테이블에 등록
-3. 목적지 MAC이 테이블에 있으면 해당 포트로 전달, 없으면 모든 포트로 플러딩
+### ✅ Network Device Communication
+- 현대 네트워크는 TCP/IP 기반
+- OSI 모델 기반 (Application ~ Physical)
+- 데이터 흐름은 상위 → 하위 계층 (전송 시), 하위 → 상위 계층 (수신 시)
 
-### [라우터의 L3 포워딩]
-1. PC1이 다른 네트워크의 PC2로 패킷 전송
-2. 라우터는 목적지 IP를 라우팅 테이블에서 검색
-3. 일치하는 경로가 있으면 해당 인터페이스로 포워딩
+### ✅ Layer 2 Forwarding
+- MAC 주소 기반 전달
+- MAC 주소: 48비트 / OUI + 장치 ID
+- 브로드캐스트 주소: `FF:FF:FF:FF:FF:FF`
+- **Collision Domain**: 허브는 동일 도메인, 스위치는 포트 단위 분리
+
+### ✅ VLAN (Virtual LAN)
+- 브로드캐스트 도메인 분리
+- VLAN 간 통신은 라우터 또는 Layer 3 스위치 필요
+- 802.1Q Tag 구성: TPID(0x8100), PCP, DEI, VLAN ID
+
+#### Example 1-1: VLAN 생성
+```shell
+SW1(config)# vlan 10
+SW1(config-vlan)# name PCs
+```
+
+#### Example 1-2: VLAN 포트 매핑 조회
+```shell
+SW1# show vlan
+```
+
+### ✅ Access Port
+- 단일 VLAN에 연결
+- 태깅 없음
+
+#### Example 1-4: Access 포트 설정
+```shell
+SW1(config)# interface gi1/0/15
+SW1(config-if)# switchport mode access
+SW1(config-if)# switchport access vlan 99
+```
+
+### ✅ Trunk Port
+- 다수의 VLAN을 전달
+- 802.1Q 태깅 포함
+- Native VLAN 설정 권장 (1 제외)
+
+#### Example 1-6: Trunk 포트 상태 확인
+```shell
+SW1# show interfaces trunk
+```
 
 ---
 
-## 6. 요약
+## 🔎 Layer 2 진단 명령어
 
-- L2는 MAC, L3는 IP 기반으로 포워딩
-- 스위치/라우터의 테이블(주소 테이블, 라우팅 테이블) 구조와 동작 원리 이해가 핵심
-- 실습을 통해 실제 포워딩 경로와 테이블 변화를 꼭 확인해볼 것
+| 기능 | 명령어 |
+|------|--------|
+| MAC 테이블 조회 | `show mac address-table` |
+| 포트 구성 확인 | `show interfaces gi1/0/x switchport` |
+| 전체 인터페이스 상태 | `show interfaces status` |
+
+---
+
+## 🌐 Layer 3 Forwarding
+
+- ARP를 통한 MAC 주소 결정
+- 목적지 IP가 다른 서브넷 → 라우터 경유
+
+#### Example: IPv4/IPv6 주소 설정
+```shell
+R1(config)# interface gi0/0/0
+R1(config-if)# ip address 10.10.10.254 255.255.255.0
+R1(config-if)# ipv6 address 2001:db8:10::254/64
+```
+
+### 🔀 Routed Subinterfaces
+```shell
+R2(config)# interface g0/0/1.10
+R2(config-subif)# encapsulation dot1Q 10
+R2(config-subif)# ip address 10.10.10.2 255.255.255.0
+```
+
+### 🔧 Switched Virtual Interface (SVI)
+```shell
+SW1(config)# interface vlan 10
+SW1(config-if)# ip address 10.10.10.1 255.255.255.0
+```
+
+### 🔧 Routed Switch Port
+```shell
+SW1(config)# int gi1/0/14
+SW1(config-if)# no switchport
+SW1(config-if)# ip address 10.20.20.1 255.255.255.0
+```
+
+---
+
+## 🚀 Forwarding Architectures
+
+### 🧠 Process Switching
+- 소프트웨어(CPU) 처리 기반
+- ARP 미완성 패킷 등 예외 트래픽 처리
+
+### ⚡ Cisco Express Forwarding (CEF)
+- 고속 하드웨어 전환 기술
+- 구성요소:
+  - FIB: 목적지 IP → 다음 홉 IP
+  - Adjacency Table: 다음 홉 IP → MAC 주소
+
+### 🧠 TCAM
+- Value/Mask/Result 기반
+- ACL, QoS, PBR 등의 빠른 매칭 처리
+
+### 📊 Centralized vs Distributed
+- Centralized: RP가 모든 처리
+- Distributed: 라인카드가 개별 처리 → 확장성 우수
+
+---
+
+## 🛠️ SDM Templates
+
+- **Switch Database Manager (SDM)**는 스위치 리소스 할당 제어
+- 설정 명령:
+```shell
+SW1(config)# sdm prefer advanced
+SW1# reload
+```
+
+#### Example 1-17: 현재 SDM 템플릿 보기
+```shell
+SW1# show sdm prefer
+```
+
+---
+
+## 📝 Define Key Terms
+
+- access port
+- Address Resolution Protocol (ARP)
+- broadcast domain
+- Cisco Express Forwarding (CEF)
+- collision domain
+- content addressable memory (CAM)
+- Layer 2 forwarding / Layer 3 forwarding
+- Forwarding Information Base (FIB)
+- MAC address table
+- native VLAN
+- process switching
+- Routing Information Base (RIB)
+- trunk port
+- ternary content addressable memory (TCAM)
+- virtual LAN (VLAN)
+
+---
+
+## 📋 Command Reference
+
+| 작업 | 명령어 |
+|------|--------|
+| VLAN 정의 | `vlan vlan-id`<br>`name vlan-name` |
+| Access 포트 설정 | `switchport mode access`<br>`switchport access vlan X` |
+| Trunk 포트 설정 | `switchport mode trunk` |
+| 정적 MAC 등록 | `mac address-table static ...` |
+| ARP 테이블 보기 | `show ip arp` |
+| 인터페이스 상태 확인 | `show interfaces status` |
+| 인터페이스 구성 확인 | `show interfaces interface-id switchport` |
+| IP 확인 | `show ip interface brief` |
+| IPv6 확인 | `show ipv6 interface brief` |
+
+---
+
+## 🧪 Exam Preparation Tasks
+- 본 장의 연습문제
+- Chapter 30 “Final Preparation”
+- Pearson Test Prep 시뮬레이션 문제 활용
+
+---
+
+## 🔗 참고 문헌
+
+- *Inside Cisco IOS Software Architecture*  
+  - ISBN-13: 9781587058165
+- *Cisco Express Forwarding*  
+  - ISBN-13: 9780133433430
