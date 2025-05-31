@@ -1,12 +1,12 @@
 
 # CHAPTER 1: Packet Forwarding
 
-## 📚 Chapter Summary
+## Chapter Summary
 이 장에서는 네트워크 장비(스위치와 라우터)가 어떻게 L2/L3 트래픽을 전달하는지를 설명하며, 포워딩 아키텍처(Centralized vs Distributed), CEF, VLAN, Access/Trunk 포트 설정 등을 다룹니다.
 
 ---
 
-## 🧠 "Do I Know This Already?" Quiz & Answers
+## "Do I Know This Already?" Quiz & Answers
 
 | 번호 | 문제 요약 | 정답 | 해설 요약 |
 |------|----------|------|------------|
@@ -20,20 +20,20 @@
 
 ---
 
-## 📖 Foundation Topics
+## Foundation Topics
 
-### ✅ Network Device Communication
+### Network Device Communication
 - 현대 네트워크는 TCP/IP 기반
 - OSI 모델 기반 (Application ~ Physical)
 - 데이터 흐름은 상위 → 하위 계층 (전송 시), 하위 → 상위 계층 (수신 시)
 
-### ✅ Layer 2 Forwarding
+### Layer 2 Forwarding
 - MAC 주소 기반 전달
 - MAC 주소: 48비트 / OUI + 장치 ID
 - 브로드캐스트 주소: `FF:FF:FF:FF:FF:FF`
 - **Collision Domain**: 허브는 동일 도메인, 스위치는 포트 단위 분리
 
-### ✅ VLAN (Virtual LAN)
+### VLAN (Virtual LAN)
 - 브로드캐스트 도메인 분리
 - VLAN 간 통신은 라우터 또는 Layer 3 스위치 필요
 - 802.1Q Tag 구성: TPID(0x8100), PCP, DEI, VLAN ID
@@ -49,7 +49,7 @@ SW1(config-vlan)# name PCs
 SW1# show vlan
 ```
 
-### ✅ Access Port
+### Access Port
 - 단일 VLAN에 연결
 - 태깅 없음
 
@@ -60,7 +60,7 @@ SW1(config-if)# switchport mode access
 SW1(config-if)# switchport access vlan 99
 ```
 
-### ✅ Trunk Port
+### Trunk Port
 - 다수의 VLAN을 전달
 - 802.1Q 태깅 포함
 - Native VLAN 설정 권장 (1 제외)
@@ -72,7 +72,7 @@ SW1# show interfaces trunk
 
 ---
 
-## 🔎 Layer 2 진단 명령어
+## Layer 2 진단 명령어
 
 | 기능 | 명령어 |
 |------|--------|
@@ -82,7 +82,7 @@ SW1# show interfaces trunk
 
 ---
 
-## 🌐 Layer 3 Forwarding
+## Layer 3 Forwarding
 
 - ARP를 통한 MAC 주소 결정
 - 목적지 IP가 다른 서브넷 → 라우터 경유
@@ -94,20 +94,20 @@ R1(config-if)# ip address 10.10.10.254 255.255.255.0
 R1(config-if)# ipv6 address 2001:db8:10::254/64
 ```
 
-### 🔀 Routed Subinterfaces
+### Routed Subinterfaces
 ```shell
 R2(config)# interface g0/0/1.10
 R2(config-subif)# encapsulation dot1Q 10
 R2(config-subif)# ip address 10.10.10.2 255.255.255.0
 ```
 
-### 🔧 Switched Virtual Interface (SVI)
+### Switched Virtual Interface (SVI)
 ```shell
 SW1(config)# interface vlan 10
 SW1(config-if)# ip address 10.10.10.1 255.255.255.0
 ```
 
-### 🔧 Routed Switch Port
+### Routed Switch Port
 ```shell
 SW1(config)# int gi1/0/14
 SW1(config-if)# no switchport
@@ -116,29 +116,29 @@ SW1(config-if)# ip address 10.20.20.1 255.255.255.0
 
 ---
 
-## 🚀 Forwarding Architectures
+## Forwarding Architectures
 
-### 🧠 Process Switching
+### Process Switching
 - 소프트웨어(CPU) 처리 기반
 - ARP 미완성 패킷 등 예외 트래픽 처리
 
-### ⚡ Cisco Express Forwarding (CEF)
+### Cisco Express Forwarding (CEF)
 - 고속 하드웨어 전환 기술
 - 구성요소:
   - FIB: 목적지 IP → 다음 홉 IP
   - Adjacency Table: 다음 홉 IP → MAC 주소
 
-### 🧠 TCAM
+### TCAM
 - Value/Mask/Result 기반
 - ACL, QoS, PBR 등의 빠른 매칭 처리
 
-### 📊 Centralized vs Distributed
+### Centralized vs Distributed
 - Centralized: RP가 모든 처리
 - Distributed: 라인카드가 개별 처리 → 확장성 우수
 
 ---
 
-## 🛠️ SDM Templates
+## SDM Templates
 
 - **Switch Database Manager (SDM)**는 스위치 리소스 할당 제어
 - 설정 명령:
@@ -154,7 +154,7 @@ SW1# show sdm prefer
 
 ---
 
-## 📝 Define Key Terms
+## Define Key Terms
 
 - access port
 - Address Resolution Protocol (ARP)
@@ -174,7 +174,7 @@ SW1# show sdm prefer
 
 ---
 
-## 📋 Command Reference
+## Command Reference
 
 | 작업 | 명령어 |
 |------|--------|
@@ -190,14 +190,14 @@ SW1# show sdm prefer
 
 ---
 
-## 🧪 Exam Preparation Tasks
+## Exam Preparation Tasks
 - 본 장의 연습문제
 - Chapter 30 “Final Preparation”
 - Pearson Test Prep 시뮬레이션 문제 활용
 
 ---
 
-## 🔗 참고 문헌
+## 참고 문헌
 
 - *Inside Cisco IOS Software Architecture*  
   - ISBN-13: 9781587058165
