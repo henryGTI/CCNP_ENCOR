@@ -476,3 +476,196 @@ show interfaces status
 ```
 출력 항목: 포트 ID, VLAN, Duplex, 속도, 유형 등
 포트 전체 상태를 간결하게 한눈에 확인할 수 있는 유용한 명령입니다.
+
+---
+
+## Example 1-10: Viewing Overall Interface Status
+
+```shell
+SW1# show interfaces status
+```
+이 명령어는 각 포트의 전반적인 상태를 간단한 테이블 형식으로 출력합니다.
+
+- 포트	상태	VLAN	Duplex	속도	유형
+- Gi1/0/1	notconnect	1	auto	auto	10/100/1000BaseTX
+- Gi1/0/2	connected	trunk	a-full	1000	10/100/1000BaseTX
+- notconnect: 포트가 연결되어 있지 않음
+- connected: 정상적으로 연결된 상태
+- VLAN: Access 포트일 경우 VLAN 번호, Trunk일 경우 trunk로 표시
+- Duplex: auto, a-full(자동 협상된 full duplex) 등
+- 속도: 자동 협상 또는 고정된 속도
+- 유형(Type): 물리적 인터페이스 유형 (예: 10/100/1000BaseTX)
+
+이 명령어는 포트 상태를 빠르게 점검하고, 연결 문제를 진단할 때 유용합니다.
+
+## Layer 3 Forwarding
+
+**Layer 3 포워딩**은 다음 두 가지 시나리오를 처리합니다:
+- 같은 **서브넷** 간 트래픽 전달
+- 다른 **서브넷** 간 트래픽 라우팅
+
+OSI 계층 기준으로, 데이터는 **Layer 7**에서 시작하여 **Layer 1**로 내려가며 캡슐화되어 전송됩니다.
+
+---
+
+### Local Network Forwarding
+
+같은 서브넷에 있는 경우:
+- 송신 장치는 **자신의 MAC 주소는 알고 있지만**, 목적지 MAC 주소는 모를 수 있습니다.
+- 이를 해결하기 위해 **ARP (Address Resolution Protocol)** 사용
+
+---
+
+## Key Topic: ARP (Address Resolution Protocol)
+
+**ARP**는 IP 주소를 MAC 주소에 매핑하기 위해 사용됩니다.
+
+1. 송신자는 **브로드캐스트 ARP 요청**을 전송합니다.
+2. 대상 IP를 가진 장치는 **유니캐스트 ARP 응답**을 반환합니다.
+
+---
+
+### ARP 테이블 조회 명령어
+
+```shell
+show ip arp [mac-address | ip-address | vlan <vlan-id> | interface <interface-id>]
+Packet Routing
+```
+다른 서브넷의 IP 주소로 패킷을 전송할 경우:
+장치는 라우팅 테이블과 ARP 테이블을 조회
+
+**다음 홉(Next Hop)**의 IP 주소 및 MAC 주소를 확인하여 전송
+
+---
+
+### Figure 1-5: Layer 2 Addressing Rewrite
+예: PC-A → R1 → PC-B
+
+R1을 경유하면서 목적지 MAC 주소가 변경됨
+
+라우터는 Layer 3 주소(IP)를 유지하면서 Layer 2 주소(MAC)를 수정하여 포워딩함
+
+IPv4 주소 할당
+라우터 인터페이스에 IPv4 주소를 할당하려면:
+
+```
+ip address <ip-address> <subnet-mask>
+```
+인터페이스가 up 상태일 경우, 해당 네트워크는 자동으로 **Routing Information Base (RIB)**에 등록됩니다.
+
+RIB에 등록된 직접 연결된 네트워크의 Administrative Distance는 0으로, 가장 높은 우선순위를 가집니다.
+
+보조 IP 주소 (Secondary IP)
+하나의 인터페이스에 여러 IPv4 주소를 할당할 수 있으며, 이 경우 secondary 키워드를 사용합니다.
+
+IPv6 주소 할당
+```
+ipv6 address <ipv6-address>/<prefix-length>
+```
+
+---
+
+### Example 1-11: Assigning IP Addresses to Routed Interfaces
+```
+R1(config)# configure terminal
+R1(config)# interface gi0/0/0
+R1(config-if)# ip address 10.10.10.254 255.255.255.0
+R1(config-if)# ip address 172.16.10.254 255.255.255.0 secondary
+R1(config-if)# ipv6 address 2001:db8:10::254/64
+R1(config-if)# ipv6 address 2001:db8:20::172:1/64
+Routed Subinterfaces
+```
+
+VLAN 간 라우팅을 위한 **서브인터페이스 (Subinterface)**는
+물리 포트를 절약하면서 여러 VLAN에 대해 라우팅을 수행할 수 있게 합니다.
+
+서브인터페이스 구성 방식
+```
+interface <interface-name>.<subinterface-number>
+encapsulation dot1Q <vlan-id>
+```
+---
+
+### Example 1-12: Configuring Routed Subinterfaces
+```
+R2(config)# interface g0/0/1.10
+R2(config-subif)# encapsulation dot1Q 10
+R2(config-subif)# ip address 10.10.10.2 255.255.255.0
+R2(config-subif)# ipv6 address 2001:db8:10::2/64
+```
+서브인터페이스는 각 VLAN ID에 맞춰 encapsulation 설정 후, IP 주소를 개별 할당합니다.
+
+---
+
+## Switched Virtual Interfaces (SVIs)
+
+**멀티레이어 스위치**는 VLAN 인터페이스(SVI: Switched Virtual Interface)에 **IP 주소를 설정하여 라우팅** 기능을 수행할 수 있습니다.
+
+- 각 SVI는 해당 **VLAN이 활성화되어 있어야** 동작합니다.
+- SVI는 **인터페이스 vlan <vlan-id>** 명령을 통해 생성됩니다.
+
+### Example 1-13: Creating a Switched Virtual Interface (SVI)
+
+```shell
+SW1(config)# interface vlan 10
+SW1(config-if)# ip address 10.10.10.1 255.255.255.0
+SW1(config-if)# ipv6 address 2001:db8:10::1/64
+SW1(config-if)# no shutdown
+```
+SVI는 인터페이스 상태가 up, 그리고 해당 VLAN이 스위치에 존재해야 활성화됩니다.
+
+Routed Switch Ports
+스위치의 Layer 2 포트를 Layer 3 포트로 변경하려면 no switchport 명령을 사용합니다.
+라우터처럼 직접 IP 주소를 할당하여 Layer 3 인터페이스로 동작하게 만듭니다.
+
+### Example 1-14: Configuring a Routed Switch Port
+```
+SW1(config)# interface gi1/0/14
+SW1(config-if)# no switchport
+SW1(config-if)# ip address 10.20.20.1 255.255.255.0
+SW1(config-if)# ipv6 address 2001:db8:20:1::1/64
+SW1(config-if)# no shutdown
+```
+
+IP 주소 검증 명령어
+IPv4 확인
+```
+show ip interface [brief | interface-id | vlan <vlan-id>]
+```
+- 할당된 IPv4 주소
+- 인터페이스 상태 (up/down)
+- 프로토콜 상태를 요약
+
+IPv6 확인
+```
+show ipv6 interface [brief | interface-id | vlan <vlan-id>]
+```
+
+IPv6 주소 및 상태를 IPv4와 동일한 방식으로 확인 가능
+
+Forwarding Architectures (전달 아키텍처)
+발전 과정 요약
+초기 라우터는 CPU를 이용한 패킷 처리 (소프트웨어 처리)
+현재는 Layer 2 헤더를 제거하지 않고, 빠르게 IP 처리 수행
+빠른 전송을 위해 다양한 포워딩 기법이 도입됨
+
+Key Topic: Process Switching
+Process Switching은 가장 기본적인 소프트웨어 기반 포워딩 방식입니다.
+
+다음 상황에서 사용됩니다:
+
+- 라우터 자체가 목적지인 패킷
+- 하드웨어로 처리할 수 없는 복잡한 패킷
+- ARP 해결되지 않은 상태의 패킷
+- ip_input 프로세스
+- 라우팅 테이블과 ARP 테이블을 참조하여 목적지 MAC 주소 결정
+- TTL 감소, IP 체크섬 재계산 수행
+- 다음 홉 라우터로 전달
+
+---
+
+### Figure 1-6: Process Switching 흐름
+하드웨어 전송이 불가능한 패킷이 **소프트웨어 경로(ip_input)**로 전달되는 흐름을 도식화
+
+CEF로 넘기지 못한 예외 상황 처리에 사용됨
+Process Switching은 느리지만 예외 처리, 진단 및 디버깅 시 필수적인 포워딩 방식입니다.
